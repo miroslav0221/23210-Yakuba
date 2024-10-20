@@ -1,3 +1,0 @@
-Lysostaphin (EC 3.4.24.75, glycyl-glycine endopeptidase) is a Staphylococcus simulans metalloendopeptidase (crystal structure of lysostaphin). It can function as a bacteriocin (antimicrobial) against Staphylococcus aureus.[1]
-
-Lysostaphin is a 27 KDa glycylglycine endopeptidase, an antibacterial enzyme which is capable of cleaving the crosslinking pentaglycine bridges found in the cell wall peptidoglycan of certain staphylococci. Lysostaphin was first isolated from a culture of Staphylococcus simulans by Schindler and Schuhardt in 1964.[2] S. aureus cell walls contain high proportions of pentaglycine, making lysostaphin a highly effective agent against both actively growing and quiescent bacteria.[3]
