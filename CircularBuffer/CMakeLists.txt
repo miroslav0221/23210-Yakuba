@@ -1,26 +1,3 @@
-#cmake_minimum_required(VERSION 3.29)
-#project(CircularBuffer)
-#
-#set(CMAKE_CXX_STANDARD 17)
-##set(CMAKE_CXX_OUTPUT_EXTENSION_REPLACE 1)
-#
-#
-#add_subdirectory(googletest)
-##enable_testing()
-#
-#include_directories(include)
-#
-#add_executable(CircularBuffer src/main.cpp
-#        include/CircularBuffer.h
-#        src/CircularBuffer.cpp
-#        tests/tests_circular_buffer.cpp
-#)
-##add_executable(tests tests/tests_circular_buffer.cpp src/CircularBuffer.cpp)
-##add_executable(test_lab1 main.cpp CircularBuffer.cpp)
-#target_link_libraries(CircularBuffer gtest gtest_main)
-#
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage -fprofile-arcs -ftest-coverage")
-
 cmake_minimum_required(VERSION 3.22)
 project(CircularBuffer)
 
