@@ -1,2 +1,7 @@
+.idea
+.gitmodules
 .DS_Store
 cmake-build-debug
+build
+cmake-build-debug-coverage
+googletest
