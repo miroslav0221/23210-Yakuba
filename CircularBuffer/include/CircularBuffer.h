@@ -5,10 +5,26 @@ typedef char value_type;
 class CircularBuffer {
 private:
     value_type * buffer;
-    std::size_t start_;
+    size_t start_;
     size_t end_;
     size_t capacity_; // размер буфера
     size_t size_; // количество элементов в буфере
+    value_type & value_index(int i) {
+        int index = i;
+        if (i < 0) {
+            index = i + capacity_;
+        }
+        value_type & elem = buffer[(start_+index)%capacity_];
+        return elem;
+    }
+    const value_type & value_index(int i) const{
+        int index = i;
+        if (i < 0) {
+            index = i + capacity_;
+        }
+        const value_type & elem = buffer[(start_+index)%capacity_];
+        return elem;
+    }
 public:
     CircularBuffer();
     ~CircularBuffer();

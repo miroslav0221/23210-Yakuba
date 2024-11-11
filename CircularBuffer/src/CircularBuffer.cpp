@@ -10,8 +10,10 @@ CircularBuffer::CircularBuffer() {
 }
 
 CircularBuffer::~CircularBuffer() {
-    delete[] buffer;
-    buffer = nullptr;
+    if(buffer) {
+        delete[] buffer;
+        buffer = nullptr;
+    }
 }
 
 CircularBuffer::CircularBuffer(int capacity) {
@@ -40,90 +42,44 @@ CircularBuffer::CircularBuffer(int capacity, const value_type &elem) {
     std::fill(buffer, buffer+capacity, elem);
 }
 
-//Доступ по индексу. Не проверяют правильность индекса.
 value_type & CircularBuffer::operator[](int i) {
-    value_type & elem = buffer[(start_+i)%capacity_];
-    return elem;
-}
-const value_type & CircularBuffer::operator[](int i) const {
-    const char & elem = buffer[(start_+i)%capacity_];
-    return elem;
+    return value_index(i);
 }
 
-//Доступ по индексу. Методы бросают исключение в случае неверного индекса.
+const value_type & CircularBuffer::operator[](int i) const {
+    return value_index(i);
+}
+
 value_type & CircularBuffer::at(int i) {
-    if (i < capacity_) {
-        char & elem = buffer[(start_+i)%capacity_];
-        return elem;
+    if (i < size_) {
+        return value_index(i);
     }
-    throw std::out_of_range("i >= capacity!");
+    throw std::out_of_range("i >= size!");
 }
 const value_type & CircularBuffer::at(int i) const {
-    if (i < capacity_  and i >= 0) {
-        const char & elem = buffer[(start_+i)%capacity_];
-        return elem;
+    if (i < size_) {
+        return value_index(i);
     }
-    throw std::out_of_range("i >= capacity!");
+    throw std::out_of_range("i >= size!");
 }
 
 value_type & CircularBuffer::front() {
-    if (capacity_) {
-        if (size_ == 0) {
-            throw std::logic_error("Buffer is empty");
-        }
-        value_type & elem = buffer[0];
-        return elem;
-    }
-    throw std::logic_error("Capacity = 0");
+    return (*this)[0];
 }
 value_type & CircularBuffer::back() {
-    if (capacity_) {
-        if (size_ == 0) {
-            throw std::logic_error("Buffer is empty");
-        }
-        value_type & elem = buffer[end_];
-        if (end_ == size_) {
-            elem = buffer[end_-1];
-        }
-        return elem;
-
-    }
-    throw std::logic_error("Capacity = 0");
+    return (*this)[end_ - 1];
 
 }
 const value_type & CircularBuffer::front() const {
-    if (capacity_) {
-        if (size_ == 0) {
-            throw std::logic_error("Buffer is empty");
-        }
-        const value_type & elem = buffer[0];
-        return elem;
-    }
-    throw std::logic_error("Capacity = 0");
-
+    return (*this)[0];
 }
+
 const value_type & CircularBuffer::back() const {
-    if (capacity_) {
-        if (size_ == 0) {
-            throw std::logic_error("Buffer is empty");
-        }
-        size_t index_element = end_;
-        if (end_ == size_) {
-            index_element = end_ - 1;
-        }
-        const value_type & elem = buffer[index_element];
-        return elem;
-    }
-    throw std::logic_error("Capacity = 0");
+    return (*this)[end_ - 1];
 }
-
-
 
 
 value_type * CircularBuffer::linearize() {
-    if (size_ <= 0) {
-        throw std::logic_error("Size == 0");
-    }
     if (is_linearized()) {
         return &buffer[0];
     }
@@ -131,7 +87,7 @@ value_type * CircularBuffer::linearize() {
     int new_index = 0;
     if (start_ == end_) {
         end_ = (end_ + 1)%capacity_;
-    } // no test
+    }
     while(start_ != end_) {
         start_ = start_ % capacity_;
         new_buffer[new_index] = buffer[0];
@@ -145,20 +101,19 @@ value_type * CircularBuffer::linearize() {
     return &buffer[0];
 }
 
-//Проверяет, является ли буфер линеаризованным.
 bool CircularBuffer::is_linearized() const {
-    if (start_ == 0 and end_ == size_) {
-        return true;
-    }
-    return false;
+    return start_ == 0 and end_ == size_;
 }
 
 void CircularBuffer::rotate(int new_begin) {
-    if (new_begin < 0 or new_begin >= size_) {
-        throw std::invalid_argument("new_begin < 0");
+    if (new_begin >= static_cast<int>(size_)) {
+        throw std::invalid_argument("new_begin >= size");
     }
     end_ = (end_ - (start_ - new_begin)) % capacity_;
     start_ = new_begin;
+    if (new_begin < 0) {
+        start_ = new_begin + capacity_;
+    }
 }
 
 size_t CircularBuffer::size() const {
@@ -166,17 +121,11 @@ size_t CircularBuffer::size() const {
 }
 
 bool CircularBuffer::empty() const {
-    if (size_) {
-        return false;
-    }
-    return true;
+    return !size_;
 }
 
 bool CircularBuffer::full() const {
-    if (size_ == capacity_) {
-        return true;
-    }
-    return false;
+    return size_ == capacity_;
 }
 
 size_t CircularBuffer::capacity() const {
@@ -186,7 +135,7 @@ size_t CircularBuffer::capacity() const {
 size_t CircularBuffer::reserve() const {
     return capacity_ - size_;
 }
-
+// this
 void CircularBuffer::set_capacity(int new_capacity) {
     if (new_capacity <= 0) {
         throw std::invalid_argument("Capacity <= 0");
@@ -195,7 +144,7 @@ void CircularBuffer::set_capacity(int new_capacity) {
 
     int elements = std::min(new_capacity,static_cast<int>(size_));
     for (int i = 0; i < elements; i++) {
-        new_buffer[i] = buffer[i];
+        new_buffer[i] = (*this)[i];
     }
     size_ = elements;
     capacity_ = new_capacity;
@@ -204,29 +153,22 @@ void CircularBuffer::set_capacity(int new_capacity) {
     delete[] buffer;
     buffer = new_buffer;
 }
-//Изменяет размер буфера.
-//В случае расширения, новые элементы заполняются элементом item.
+
 void CircularBuffer::resize(int new_size, const value_type & item) {
     if (new_size < 0) {
-        throw std::invalid_argument("Capacity <= 0");
+        throw std::invalid_argument("Size < 0");
     }
     if (new_size > capacity_) {
         capacity_ = new_size;
     }
     auto new_buffer = new value_type[capacity_];
     if (new_size > size_) {
-        for (int i = 0; i < new_size; i++) {
-            if (buffer[i]) {
-                new_buffer[i] = buffer[i];
-            }
-            else {
-                new_buffer[i] = item;
-            }
-        }
+        std::memcpy(new_buffer, buffer, size_ * sizeof(value_type));
+        std::fill(new_buffer, new_buffer+(size_ - new_size), item);
     }
     else {
         for (int i = 0; i < new_size; i++) {
-            new_buffer[i] = buffer[i];
+            new_buffer[i] = (*this)[i];
         }
     }
     end_ = new_size % capacity_;
@@ -235,7 +177,7 @@ void CircularBuffer::resize(int new_size, const value_type & item) {
     delete[] buffer;
     buffer = new_buffer;
 }
-//Оператор присваивания.
+
 CircularBuffer & CircularBuffer::operator=(const CircularBuffer & cb) {
     delete[] this->buffer;
     this->capacity_ = cb.capacity_;
@@ -249,11 +191,8 @@ CircularBuffer & CircularBuffer::operator=(const CircularBuffer & cb) {
     return *this;
 }
 
-//Обменивает содержимое буфера с буфером cb.
 void CircularBuffer::swap(CircularBuffer & cb) {
-    value_type* buffer_new = cb.buffer;
-    cb.buffer = this->buffer;
-    this->buffer = buffer_new;
+    std::swap (this->buffer, cb.buffer);
     std::swap(this->size_, cb.size_);
     std::swap(this->capacity_, cb.capacity_);
     std::swap(this->end_, cb.end_);
@@ -262,16 +201,20 @@ void CircularBuffer::swap(CircularBuffer & cb) {
 
 
 void CircularBuffer::push_back(const value_type & item) {
-    buffer[end_] = item;
+    if (end_ == capacity_) {
+        end_ = 0;
+    }
+
+    (*this)[end_] = item;
 
     end_ = (end_ + 1) % capacity_;
 
     if (size_ == capacity_) {
         start_ = (start_ + 1) % capacity_;
-    } else {
+    }
+    else {
         size_++;
     }
-
 }
 
 void CircularBuffer::push_front(const value_type & item) {
@@ -287,28 +230,16 @@ void CircularBuffer::push_front(const value_type & item) {
     else {
         size_++;
     }
-    buffer[start_] = item;
+    (*this)[0] = item;
 }
 
 void CircularBuffer::pop_back() {
-    if (size_ == 0) {
-        throw std::out_of_range("Size == 0");
-    }
     end_--;
-    // if (end_ == 0) {
-    //     end_ = capacity_ - 1;
-    // }
-    // else {
-    //     end_--;
-    // }
     buffer[end_] = static_cast<value_type>(0);
     size_--;
 }
 
 void CircularBuffer::pop_front() {
-    if (size_ == 0) {
-        throw std::out_of_range("Size == 0");
-    }
     buffer[0] = static_cast<value_type>(0);
     if (start_ == capacity_ - 1) {
         start_ = 0;
@@ -320,14 +251,19 @@ void CircularBuffer::pop_front() {
 }
 
 void CircularBuffer::insert(int pos, const value_type & item) {
-    if (pos < 0 && pos > capacity_ - 1) {
+    if (pos > capacity_ - 1) {
         throw std::out_of_range("wrong value");
     }
-    buffer[pos] = item;
+    (*this)[pos] = item;
 }
 
-//Удаляет элементы из буфера в интервале [first, last).
 void CircularBuffer::erase(int first, int last) {
+    if (first < 0) {
+        first = first + capacity_;
+    }
+    if (last < 0) {
+        last = last + capacity_;
+    }
     if (first < 0 or last < 0 or first > capacity_-1 or last > capacity_-1) {
         throw std::out_of_range("wrong value");
     }
@@ -335,7 +271,6 @@ void CircularBuffer::erase(int first, int last) {
         throw std::invalid_argument("invalid argument");
     }
     int length = last - first;
-
     std::memmove(buffer + first, buffer + last, capacity_-last);
     for (int i = 0; i < length; i++) {
         buffer[capacity_ - i - 1] = static_cast<value_type>(0);
@@ -356,27 +291,14 @@ bool operator==(const CircularBuffer & a, const CircularBuffer & b) {
     if ((a.capacity() == b.capacity()) and (a.size() == b.size())) {
         size_t capacity = a.capacity();
         for (int i = 0; i < capacity; i++) {
-            if (a.at(i) == b.at(i)) {
-                continue;
+            if (a.at(i) != b.at(i)) {
+                return false;
             }
-            return false;
         }
         return true;
     }
     return false;
 }
 bool operator!=(const CircularBuffer & a, const CircularBuffer & b) {
-    if ((a.capacity() == b.capacity()) and (a.size() == b.size())) {
-        size_t capacity = a.capacity();
-        for (int i = 0; i < capacity; i++) {
-            if (a.at(i) == b.at(i)) {
-                continue;
-            }
-            return true;
-        }
-        return false;
-    }
-    return true;
+    return !(a == b);
 }
-// 0 1 2  3  4  5 6
-// 5 8 12 13 41 2 42
