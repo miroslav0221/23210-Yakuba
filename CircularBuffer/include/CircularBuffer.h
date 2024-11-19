@@ -1,30 +1,15 @@
 #ifndef CIRCULARBUFFER_H
 #define CIRCULARBUFFER_H
-#include <iostream>
-typedef char value_type;
+#include <cstddef>
+using value_type = char;
 class CircularBuffer {
 private:
     value_type * buffer;
     size_t start_;
-    size_t end_;
     size_t capacity_; // размер буфера
     size_t size_; // количество элементов в буфере
-    value_type & value_index(int i) {
-        int index = i;
-        if (i < 0) {
-            index = i + capacity_;
-        }
-        value_type & elem = buffer[(start_+index)%capacity_];
-        return elem;
-    }
-    const value_type & value_index(int i) const{
-        int index = i;
-        if (i < 0) {
-            index = i + capacity_;
-        }
-        const value_type & elem = buffer[(start_+index)%capacity_];
-        return elem;
-    }
+    int value_index(int i);
+    const int value_index(int i) const;
 public:
     CircularBuffer();
     ~CircularBuffer();
