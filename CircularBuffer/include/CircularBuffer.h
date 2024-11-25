@@ -1,14 +1,15 @@
 #ifndef CIRCULARBUFFER_H
 #define CIRCULARBUFFER_H
-#include <iostream>
-typedef char value_type;
+#include <cstddef>
+using value_type = char;
 class CircularBuffer {
 private:
     value_type * buffer;
-    std::size_t start_;
-    size_t end_;
+    size_t start_;
     size_t capacity_; // размер буфера
     size_t size_; // количество элементов в буфере
+    int value_index(int i);
+    const int value_index(int i) const;
 public:
     CircularBuffer();
     ~CircularBuffer();
