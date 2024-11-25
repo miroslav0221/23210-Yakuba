@@ -1,19 +1,11 @@
 #include "CircularBuffer.h"
 #include <iostream>
 
-int CircularBuffer::value_index(int i) {
+const int CircularBuffer::value_index(int i) const  {
     while (i < 0) {
-        i += static_cast<int>(capacity_);
+        i += static_cast<int>(size_);
     }
     return (static_cast<int>(start_) + i)%static_cast<int>(capacity_);
-}
-
-const int CircularBuffer::value_index(int i) const {
-    while (i < 0) {
-        i += static_cast<int>(capacity_);
-    }
-    const int index = i;
-    return (static_cast<int>(start_) + index)%static_cast<int>(capacity_);
 }
 
 CircularBuffer::CircularBuffer() {
@@ -37,7 +29,7 @@ CircularBuffer::CircularBuffer(int capacity) {
     size_ = 0;
 }
 
-CircularBuffer::CircularBuffer(const CircularBuffer &cb ) {
+CircularBuffer::CircularBuffer(const CircularBuffer &cb) {
     this->start_ = cb.start_;
     this->capacity_ = cb.capacity_;
     this->size_ = cb.size_;
@@ -54,26 +46,22 @@ CircularBuffer::CircularBuffer(int capacity, const value_type &elem) {
 }
 
 value_type & CircularBuffer::operator[](int i) {
-    value_type & elem = buffer[value_index(i)];
-    return elem;
+    return buffer[value_index(i)];
 }
 
 const value_type & CircularBuffer::operator[](int i) const {
-    const value_type & elem = buffer[value_index(i)];
-    return elem;
+    return buffer[value_index(i)];
 }
 
 value_type & CircularBuffer::at(int i) {
     if (i < size_) {
-        value_type & elem = (*this)[i];
-        return elem;
+        return (*this)[i];
     }
     throw std::out_of_range("i >= size!");
 }
 const value_type & CircularBuffer::at(int i) const {
     if (i < size_) {
-        const value_type & elem = (*this)[i];
-        return elem;
+        return (*this)[i];
     }
     throw std::out_of_range("i >= size!");
 }
@@ -82,7 +70,7 @@ value_type & CircularBuffer::front() {
     return (*this)[0];
 }
 value_type & CircularBuffer::back() {
-    return (*this)[static_cast<int>((start_+size_-1)%capacity_)]; //
+    return (*this)[value_index(size_ - 1)];
 
 }
 const value_type & CircularBuffer::front() const {
@@ -90,7 +78,7 @@ const value_type & CircularBuffer::front() const {
 }
 
 const value_type & CircularBuffer::back() const {
-    return (*this)[static_cast<int>((start_+size_-1)%capacity_)];
+    return (*this)[value_index(size_ - 1)];
 }
 
 
@@ -100,11 +88,10 @@ value_type * CircularBuffer::linearize() {
     }
     auto new_buffer = new value_type[capacity_];
     int new_index = 0;
-    while(start_ != (start_ + size_)%capacity_) {
-        start_ = start_ % capacity_;
-        new_buffer[new_index] = buffer[0];
+    for (size_t i = start_; i <= (start_ + size_)%capacity_; i++) {
+        i = i % capacity_;
+        new_buffer[new_index] = buffer[new_index];
         new_index++;
-        start_++;
     }
     delete[] buffer;
     buffer = new_buffer;
@@ -113,10 +100,7 @@ value_type * CircularBuffer::linearize() {
 }
 
 bool CircularBuffer::is_linearized() const {
-    if (start_ <= (size_+start_-1)%capacity_) {
-        return true;
-    }
-    return false;
+    return !start_ && start_ <= value_index(size_ - 1);
 }
 
 void CircularBuffer::rotate(int new_begin) {
@@ -126,10 +110,12 @@ void CircularBuffer::rotate(int new_begin) {
     while (new_begin < 0) {
         new_begin += static_cast<int>(capacity_);
     }
+    auto new_buffer = new value_type[capacity_];
     for (int i = 0; i < size_; i++) {
-        (*this)[i] = (*this)[(i + static_cast<int>(new_begin))%static_cast<int>(capacity_)];
+        new_buffer[value_index(i)] = (*this)[new_begin];
     }
-    start_ = new_begin;
+    delete[] buffer;
+    buffer = new_buffer;
 }
 
 size_t CircularBuffer::size() const {
@@ -174,21 +160,22 @@ void CircularBuffer::resize(int new_size, const value_type & item) {
     }
     if (new_size > capacity_) {
         capacity_ = new_size;
-    }
-    auto new_buffer = new value_type[capacity_];
-    if (new_size > size_) {
+        auto new_buffer = new value_type[capacity_];
         std::memcpy(new_buffer, buffer, size_ * sizeof(value_type));
-        std::fill(new_buffer, new_buffer+(size_ - new_size), item);
+        delete[] buffer;
+        buffer = new_buffer;
+    }
+    if (new_size > size_) {
+        std::fill(buffer, buffer+(size_ - new_size), item);
     }
     else {
-        for (int i = 0; i < new_size; i++) {
-            new_buffer[i] = (*this)[i];
+        for (int i = static_cast<int>(size_) - 1; i > new_size - 1; i--) {
+            buffer[i] = static_cast<value_type>(0);
         }
     }
     start_ = 0;
     size_ = new_size;
-    delete[] buffer;
-    buffer = new_buffer;
+
 }
 
 CircularBuffer & CircularBuffer::operator=(const CircularBuffer & cb) {
@@ -212,7 +199,7 @@ void CircularBuffer::swap(CircularBuffer & cb) {
 
 
 void CircularBuffer::push_back(const value_type & item) {
-    (*this)[static_cast<int>((size_+start_)%capacity_)] = item;
+    (*this)[static_cast<int>(size_)] = item;
     if (size_ == capacity_) {
         start_ = (start_ + 1) % capacity_;
     }
@@ -235,12 +222,12 @@ void CircularBuffer::push_front(const value_type & item) {
 }
 
 void CircularBuffer::pop_back() {
-    buffer[(size_+start_-1)%capacity_] = static_cast<value_type>(0);
+    (*this)[static_cast<int>(size_ - 1)] = static_cast<value_type>(0);
     size_--;
 }
 
 void CircularBuffer::pop_front() {
-    buffer[0] = static_cast<value_type>(0);
+    (*this)[0] = static_cast<value_type>(0);
     if (start_ == capacity_ - 1) {
         start_ = 0;
     }
@@ -273,7 +260,7 @@ void CircularBuffer::erase(int first, int last) {
     int length = last - first;
     std::memmove(buffer + first, buffer + last, capacity_-last);
     for (int i = 0; i < length; i++) {
-        buffer[capacity_ - i - 1] = static_cast<value_type>(0);
+        (*this)[static_cast<int>(size_) - 1] = static_cast<value_type>(0);
         size_--;
     }
 }

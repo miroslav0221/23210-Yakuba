@@ -8,7 +8,6 @@ private:
     size_t start_;
     size_t capacity_; // размер буфера
     size_t size_; // количество элементов в буфере
-    int value_index(int i);
     const int value_index(int i) const;
 public:
     CircularBuffer();
