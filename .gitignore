@@ -4,4 +4,4 @@
 cmake-build-debug
 build
 cmake-build-debug-coverage
-googletest
+lab2-GameofLife
