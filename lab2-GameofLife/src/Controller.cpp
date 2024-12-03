@@ -34,6 +34,7 @@ void Controller::read_file(const std::string & filename) const {
     }
     std::string current_str;
     int count_str = 0;
+    Field & field = model.get_field();
     while(std::getline(fs, current_str)) {
         count_str++;
         int index_1 = 0, index_2 = 0, weight = 0, height = 0;
@@ -44,7 +45,7 @@ void Controller::read_file(const std::string & filename) const {
             }
             continue;
         }
-        if(count_str == 2) {
+        if (count_str == 2) {
             index_1 = static_cast<int>(current_str.find("#N"));
             if (index_1 == std::string::npos) {
                 std::cout << "-----------------------" << std::endl
@@ -78,27 +79,27 @@ void Controller::read_file(const std::string & filename) const {
                 const std::string str_weight = current_str.substr(index_1 + 1);
                 height = std::stoi(str_height);
                 weight = std::stoi(str_weight);
-                model.change_size(weight, height);
-                model.init_field();
+                field.change_size(weight, height);
+                field.init_field();
             }
             continue;
         }
         int x, y;
         std::istringstream stream(current_str);
         stream >> x >> y;
-        if (x >= model.get_weight()) {
+        if (x >= (model.get_field()).get_weight()) {
             continue;
         }
         if (x < 0) {
             x = (x + weight) % weight;
         }
-        if (y >= model.get_height()) {
+        if (y >= (model.get_field()).get_height()) {
             continue;;
         }
         if (y < 0) {
             y = (y + height) % height;
         }
-        model.add_life_cell(x, y);
+        (model.get_field()).add_life_cell(x, y);
     }
 }
 
@@ -125,11 +126,11 @@ void Controller::write_file(const std::string & filename) const {
     }
     fs << '\n';
     fs.write("#SIZE H", 7);
-    fs << model.get_height() << "/W" << model.get_weight() << '\n';
-    std::vector<std::vector<Model::field_cells>> field = model.get_field();
-    for (size_t i = 0; i < model.get_weight(); i++) {
-        for (size_t j = 0; j < model.get_height(); j++) {
-            if (field[i][j] == Model::alive) {
+    fs << (model.get_field()).get_height() << "/W" << (model.get_field()).get_weight() << '\n';
+    std::vector<std::vector<Field::field_cells>> field = (model.get_field()).get_field();
+    for (size_t i = 0; i < (model.get_field()).get_weight(); i++) {
+        for (size_t j = 0; j < (model.get_field()).get_height(); j++) {
+            if (field[i][j] == Field::alive) {
                 fs << i << ' ' << j << '\n';
             }
         }
@@ -137,14 +138,14 @@ void Controller::write_file(const std::string & filename) const {
 }
 
 int calc_alive_cells(const size_t i, const size_t j, const size_t weight, const size_t height,
-                     const std::vector<std::vector<Model::field_cells>> & field) {
+                     const std::vector<std::vector<Field::field_cells>> & field) {
     int count_alive_cells = 0;
     constexpr int shift_j[] {-1, -1, -1, 0, 0, 1, 1, 1};
     constexpr int shift_i[] {1, 0, -1, 1, -1, 1, 0, -1};
     for (int k = 0; k < 8; k++) {
         const size_t new_i = (i + shift_i[k] + height) % height;
         const size_t new_j = (j + shift_j[k] + weight) % weight;
-        if (field[new_i][new_j] == Model::alive) {
+        if (field[new_i][new_j] == Field::alive) {
             count_alive_cells++;
         }
     }
@@ -155,35 +156,35 @@ void Controller::change_field_by_rules(const int count_tick) const {
     std::vector<size_t> born = model.get_rules().first;
     std::vector<size_t> survive = model.get_rules().second;
 
-    const size_t weight = model.get_weight();
-    const size_t height = model.get_height();
-    std::vector<std::vector<Model::field_cells>> current_field = model.get_field();
+    const size_t weight = (model.get_field()).get_weight();
+    const size_t height = (model.get_field()).get_height();
+    std::vector<std::vector<Field::field_cells>> current_field = (model.get_field()).get_field();
 
     int count_alive_cells = 0;
     for (int tick = 0; tick < count_tick; tick++) {
         std::vector field_new(height,
-        std::vector(weight, Model::die));
+        std::vector(weight, Field::die));
         for(size_t i = 0; i < height; ++i) {
             for(size_t j = 0; j < weight; ++j) {
-                const Model::field_cells status = current_field[i][j];
+                const Field::field_cells status = current_field[i][j];
                 count_alive_cells = calc_alive_cells(i, j, weight, height, current_field);
-                if (status == Model::die and std::find(begin(born),
+                if (status == Field::die and std::find(begin(born),
                     end(born), count_alive_cells) != end(born)) {
-                    field_new[i][j] = Model::alive;
+                    field_new[i][j] = Field::alive;
                     continue;
                     } // born
-                if (status == Model::alive) {
+                if (status == Field::alive) {
                     if (std::find(begin(survive),
                     end(survive), count_alive_cells) != end(survive)) {
-                        field_new[i][j] = Model::alive;
+                        field_new[i][j] = Field::alive;
                         continue;
                     }
-                    field_new[i][j] = Model::die;
+                    field_new[i][j] = Field::die;
                 } // survive
             }
         }
         current_field = field_new;
-        model.change_field(current_field);
+        (model.get_field()).change_field(current_field);
         view.image_field();
         std::cout << "----------" << std::endl;
     }

@@ -6,7 +6,7 @@
 class Controller {
 private:
     Model & model;
-    
+
     View & view;
 public:
     explicit Controller(Model & model_new, View & view);

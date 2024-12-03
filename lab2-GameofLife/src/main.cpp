@@ -7,7 +7,8 @@
 int main(int argc, char * argv[])
 {
     int count_iter = 1;
-    Model model;
+    Field field;
+    Model model(field);
     View view(model);
     Controller controller(model, view);
     std::string namefile_in, namefile_out;
@@ -26,7 +27,6 @@ int main(int argc, char * argv[])
             break;
         case 6:
             if (static_cast<std::string>(argv[2]) == "-i" && static_cast<std::string>(argv[4]) == "-o") {
-                //mode = 2;
                 namefile_in = argv[1];
                 namefile_out = argv[5];
                 count_iter = std::stoi(std::string(argv[3]));
