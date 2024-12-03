@@ -2,8 +2,6 @@
 #define MODEL_H
 #include <iostream>
 
-
-
 class Model {
 public:
     enum field_cells {
@@ -11,14 +9,15 @@ public:
         die
     };
 private:
-    size_t  weight;
-    size_t  height;
+    size_t weight;
+    size_t height;
     std::vector<size_t> count_for_survive;
     std::vector<size_t> count_for_born;
     std::vector<std::vector<field_cells>> field;
     std::string name_universe;
 
 public:
+    Model();
 
     void change_name_universe(const std::string & new_name_universe);
 

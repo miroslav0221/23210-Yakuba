@@ -29,85 +29,76 @@ std::vector<size_t> convert_str_to_vector(const std::string & str) {
 void Controller::read_file(const std::string & filename) const {
     std::fstream fs;
     fs.open(filename);
-    if (fs.is_open()) {
-        std::string current_str;
-        int count_str = 0;
-        while(std::getline(fs, current_str)) {
-            count_str++;
-            int index_1 = 0, index_2 = 0, weight = 0, height = 0;
-            std::string name_universe;
-
-            switch (count_str) {
-                case 1:
-                    if (current_str.find("#Life") == std::string::npos) {
-                        throw std::invalid_argument("Неверный формат файла. Файл должен быть формы .life");
-                    }
-                    break;
-
-
-                case 2:
-                    index_1 = static_cast<int>(current_str.find("#N"));
-                    if (index_1 == std::string::npos) {
-                        std::cout << "-----------------------" << std::endl
-                                << "Нет названия вселенной" << std::endl
-                                << "-----------------------" << std::endl;
-                        name_universe = "Standard name";
-                    }
-                    else {
-                        name_universe = current_str.substr(index_1 + 3);
-                    }
-                    model.change_name_universe(name_universe);
-                    break;
-                case 3:
-                    index_1 = static_cast<int>(current_str.find('B'));
-                    index_2 = static_cast<int>(current_str.find('S'));
-                    {
-                        const std::string str_born = current_str.substr(index_1 + 1, index_2 - index_1 - 2);
-                        const std::string str_survive = current_str.substr(index_2 + 1);
-                        auto born = convert_str_to_vector(str_born);
-                        auto survive = convert_str_to_vector(str_survive);
-
-                        model.change_rules(born, survive);
-                    }
-                    break;
-
-                case 4:
-                    index_1 = static_cast<int>(current_str.find('W'));
-                    index_2 = static_cast<int>(current_str.find('H'));
-                    {
-                        const std::string str_height = current_str.substr(index_2 + 1, index_1 - 2 - index_2);
-                        const std::string str_weight = current_str.substr(index_1 + 1);
-                        height = std::stoi(str_height);
-                        weight = std::stoi(str_weight);
-                        model.change_size(weight, height);
-                        model.init_field();
-                    }
-                    break;
-
-                default:
-                    int x, y;
-                    std::istringstream stream(current_str);
-                    stream >> x >> y;
-                    if (x >= model.get_weight()) {
-                        break;
-                    }
-                    if (x < 0) {
-                        x = (x + weight) % weight;
-                    }
-                    if (y >= model.get_height()) {
-                        break;
-                    }
-                    if (y < 0) {
-                        y = (y + height) % height;
-                    }
-                    model.add_life_cell(x, y);
-                    break;
-            }
-
-        }
+    if (!fs.is_open()) {
+        throw std::ios_base::failure("Не удалось открыть файл: " + filename);
     }
-    else {
-        std::cout << "Не удалось открыть файл" << std::endl;
+    std::string current_str;
+    int count_str = 0;
+    while(std::getline(fs, current_str)) {
+        count_str++;
+        int index_1 = 0, index_2 = 0, weight = 0, height = 0;
+        std::string name_universe = "Standard name";
+        if (count_str == 1) {
+            if (current_str.find("#Life") == std::string::npos) {
+                throw std::invalid_argument("Неверный формат файла. Файл должен быть формы .life");
+            }
+            continue;
+        }
+        if(count_str == 2) {
+            index_1 = static_cast<int>(current_str.find("#N"));
+            if (index_1 == std::string::npos) {
+                std::cout << "-----------------------" << std::endl
+                        << "Нет названия вселенной" << std::endl
+                        << "-----------------------" << std::endl;
+            }
+            else {
+                name_universe = current_str.substr(index_1 + 3);
+            }
+            model.change_name_universe(name_universe);
+            continue;
+        }
+        if(count_str == 3) {
+            index_1 = static_cast<int>(current_str.find('B'));
+            index_2 = static_cast<int>(current_str.find('S'));
+            {
+                const std::string str_born = current_str.substr(index_1 + 1, index_2 - index_1 - 2);
+                const std::string str_survive = current_str.substr(index_2 + 1);
+                auto born = convert_str_to_vector(str_born);
+                auto survive = convert_str_to_vector(str_survive);
+
+                model.change_rules(born, survive);
+            }
+            continue;
+        }
+        if (count_str == 4) {
+            index_1 = static_cast<int>(current_str.find('W'));
+            index_2 = static_cast<int>(current_str.find('H'));
+            {
+                const std::string str_height = current_str.substr(index_2 + 1, index_1 - 2 - index_2);
+                const std::string str_weight = current_str.substr(index_1 + 1);
+                height = std::stoi(str_height);
+                weight = std::stoi(str_weight);
+                model.change_size(weight, height);
+                model.init_field();
+            }
+            continue;
+        }
+        int x, y;
+        std::istringstream stream(current_str);
+        stream >> x >> y;
+        if (x >= model.get_weight()) {
+            continue;
+        }
+        if (x < 0) {
+            x = (x + weight) % weight;
+        }
+        if (y >= model.get_height()) {
+            continue;;
+        }
+        if (y < 0) {
+            y = (y + height) % height;
+        }
+        model.add_life_cell(x, y);
     }
 }
 

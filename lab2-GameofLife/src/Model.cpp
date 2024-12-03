@@ -1,6 +1,9 @@
 #include "Model.h"
 #include <iostream>
 
+Model::Model() : weight(0), height(0) {};
+
+
 void Model::change_name_universe(const std::string & new_name_universe) {
     name_universe = new_name_universe;
 }

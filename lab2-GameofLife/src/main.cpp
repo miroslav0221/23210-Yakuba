@@ -24,7 +24,7 @@ int main(int argc, char * argv[])
             view.image_field();
             controller.play();
             break;
-        case 6: 
+        case 6:
             if (static_cast<std::string>(argv[2]) == "-i" && static_cast<std::string>(argv[4]) == "-o") {
                 //mode = 2;
                 namefile_in = argv[1];
