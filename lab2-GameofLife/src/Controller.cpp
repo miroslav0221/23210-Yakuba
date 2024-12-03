@@ -29,9 +29,9 @@ std::vector<size_t> convert_str_to_vector(const std::string & str) {
 void Controller::read_file(const std::string & filename) const {
     std::fstream fs;
     fs.open(filename);
-    std::string current_str;
-    int count_str = 0;
     if (fs.is_open()) {
+        std::string current_str;
+        int count_str = 0;
         while(std::getline(fs, current_str)) {
             count_str++;
             int index_1 = 0, index_2 = 0, weight = 0, height = 0;
@@ -111,7 +111,7 @@ void Controller::read_file(const std::string & filename) const {
     }
 }
 
-void Controller::write_file(const std::string & filename) {
+void Controller::write_file(const std::string & filename) const {
     std::fstream fs;
     fs.open(filename, std::ios::out | std::ios::trunc);
     if (!fs.is_open()) {
@@ -148,8 +148,8 @@ void Controller::write_file(const std::string & filename) {
 int calc_alive_cells(const size_t i, const size_t j, const size_t weight, const size_t height,
                      const std::vector<std::vector<Model::field_cells>> & field) {
     int count_alive_cells = 0;
-    const int shift_j[] {-1, -1, -1, 0, 0, 1, 1, 1};
-    const int shift_i[] {1, 0, -1, 1, -1, 1, 0, -1};
+    constexpr int shift_j[] {-1, -1, -1, 0, 0, 1, 1, 1};
+    constexpr int shift_i[] {1, 0, -1, 1, -1, 1, 0, -1};
     for (int k = 0; k < 8; k++) {
         const size_t new_i = (i + shift_i[k] + height) % height;
         const size_t new_j = (j + shift_j[k] + weight) % weight;
@@ -199,8 +199,13 @@ void Controller::change_field_by_rules(const int count_tick) const {
 
 }
 
+void Controller::offline_mode(int count_iter, const std::string & out_file) const {
+    change_field_by_rules(count_iter);
+    write_file(out_file);
 
-void Controller::play() {
+}
+
+void Controller::play() const {
     help();
     while(true) {
         std::string answer;

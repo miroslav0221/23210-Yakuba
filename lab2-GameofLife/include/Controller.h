@@ -9,10 +9,10 @@ private:
     View & view;
 public:
     explicit Controller(Model & model_new, View & view);
-    //~Controller();
     void read_file(const std::string & filename) const;
-    void write_file(const std::string & filename);
-    void change_field_by_rules(const int count_tick) const;
-    void play();
+    void write_file(const std::string & filename) const;
+    void change_field_by_rules(int count_tick) const;
+    void offline_mode(int count_iter, const std::string & out_file) const;
+    void play() const;
 };
 #endif
