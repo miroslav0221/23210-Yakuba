@@ -43,7 +43,6 @@ void Controller::read_file(const std::string & filename) const {
             if (current_str.find("#Life") == std::string::npos) {
                 throw std::invalid_argument("Неверный формат файла. Файл должен быть формы .life");
             }
-            continue;
         }
         if (count_str == 2) {
             index_1 = static_cast<int>(current_str.find("#N"));
@@ -130,22 +129,26 @@ void Controller::write_file(const std::string & filename) const {
     std::vector<std::vector<Field::field_cells>> field = (model.get_field()).get_field();
     for (size_t i = 0; i < (model.get_field()).get_weight(); i++) {
         for (size_t j = 0; j < (model.get_field()).get_height(); j++) {
-            if (field[i][j] == Field::alive) {
+            if (field[i][j] == Field::alive) { //
                 fs << i << ' ' << j << '\n';
             }
         }
     }
 }
 
-int calc_alive_cells(const size_t i, const size_t j, const size_t weight, const size_t height,
-                     const std::vector<std::vector<Field::field_cells>> & field) {
+int Controller::calc_alive_cells(const size_t i, const size_t j) const{
     int count_alive_cells = 0;
-    constexpr int shift_j[] {-1, -1, -1, 0, 0, 1, 1, 1};
-    constexpr int shift_i[] {1, 0, -1, 1, -1, 1, 0, -1};
+    Field field = model.get_field();
+    size_t height = field.get_height();
+    size_t weight = field.get_weight();
+    std::vector<std::vector<Field::field_cells>> field_current = field.get_field();
+
+    const int shift_j[] {-1, -1, -1, 0, 0, 1, 1, 1};
+    const int shift_i[] {1, 0, -1, 1, -1, 1, 0, -1};
     for (int k = 0; k < 8; k++) {
         const size_t new_i = (i + shift_i[k] + height) % height;
         const size_t new_j = (j + shift_j[k] + weight) % weight;
-        if (field[new_i][new_j] == Field::alive) {
+        if (field_current[new_i][new_j] == Field::alive) {
             count_alive_cells++;
         }
     }
@@ -167,7 +170,7 @@ void Controller::change_field_by_rules(const int count_tick) const {
         for(size_t i = 0; i < height; ++i) {
             for(size_t j = 0; j < weight; ++j) {
                 const Field::field_cells status = current_field[i][j];
-                count_alive_cells = calc_alive_cells(i, j, weight, height, current_field);
+                count_alive_cells = calc_alive_cells(i, j);
                 if (status == Field::die and std::find(begin(born),
                     end(born), count_alive_cells) != end(born)) {
                     field_new[i][j] = Field::alive;

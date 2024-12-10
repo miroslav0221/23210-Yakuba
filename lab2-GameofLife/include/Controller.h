@@ -9,7 +9,7 @@ private:
 
     View & view;
 public:
-    explicit Controller(Model & model_new, View & view);
+    Controller(Model & model_new, View & view);
 
     void read_file(const std::string & filename) const;
 
@@ -20,5 +20,7 @@ public:
     void offline_mode(int count_iter, const std::string & out_file) const;
 
     void play() const;
+
+    int calc_alive_cells(size_t i, size_t j) const;
 };
 #endif

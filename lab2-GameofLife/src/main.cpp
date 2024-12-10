@@ -4,8 +4,7 @@
 #include <View.h>
 
 
-int main(int argc, char * argv[])
-{
+int main(int argc, char * argv[]) {
     int count_iter = 1;
     Field field;
     Model model(field);
