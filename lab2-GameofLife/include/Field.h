@@ -10,24 +10,23 @@ public:
 private:
     size_t weight;
     size_t height;
-    std::vector<std::vector<field_cells>> field;
+    std::vector<field_cells> field;
 public:
     Field();
 
-    void change_size(const size_t & weight_new, const size_t & height_new);
+    void set_size(const size_t & weight, const size_t & height);
 
     void init_field();
 
-    void change_field(const std::vector<std::vector<field_cells>> & new_field);
+    void change_field(const std::vector<field_cells> & new_field);
 
-    void add_life_cell(int x, int y);
+    void set_cell(int x, int y, field_cells);
+
+    Field::field_cells get_cell(int x, int y) const;
 
     size_t & get_weight();
 
     size_t & get_height();
-
-    std::vector<std::vector<field_cells>> & get_field();
-
 };
 
 

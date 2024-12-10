@@ -5,7 +5,6 @@
 class Model {
 
 private:
-
     Field & field_;
     std::vector<size_t> count_for_survive;
     std::vector<size_t> count_for_born;
@@ -22,11 +21,13 @@ public:
     std::pair<std::vector<size_t>, std::vector<size_t>> get_rules();
 
 
-
     std::string & get_name_universe();
 
     Field & get_field() const;
 
+    int calc_alive_cells(int i, int j) const;
+
+    void evolution_world();
 
 };
 

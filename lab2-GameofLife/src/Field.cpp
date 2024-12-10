@@ -3,19 +3,25 @@
 
 Field::Field() : weight(0),height(0) {};
 
-void Field::change_size(const size_t & weight_new, const size_t & height_new) {
-    weight = weight_new;
-    height = height_new;
+void Field::set_size(const size_t & weight_, const size_t & height_) {
+    weight = weight_;
+    height = height_;
 }
 
-void Field::add_life_cell(int x, int y) {
-    field[x][y] = alive;
+
+void Field::set_cell(int x, int y, field_cells status) {
+    field[(y * weight + x) % (weight*height) ] = status;
 }
 
 void Field::init_field() {
-    std::vector<std::vector<field_cells>> field_new(height, std::vector<field_cells>(weight, die));
-    field = field_new;
+    std::vector<field_cells> field_(height*weight, die);
+    field = field_;
 }
+
+Field::field_cells Field::get_cell(int x, int y) const {
+    return field[(y * weight + x) % (weight*height)];
+}
+
 
 size_t & Field::get_weight() {
     return weight;
@@ -25,10 +31,7 @@ size_t & Field::get_height() {
     return height;
 }
 
-std::vector<std::vector<Field::field_cells>> & Field::get_field() {
-    return field;
-}
 
-void Field::change_field(const std::vector<std::vector<field_cells> > & new_field) {
+void Field::change_field(const std::vector<Field::field_cells> & new_field) {
     field = new_field;
 }

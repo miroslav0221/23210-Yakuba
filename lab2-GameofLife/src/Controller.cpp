@@ -1,9 +1,8 @@
 #include "Controller.h"
+#include "Handler_file.h"
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <vector>
-#include <sstream>
 #include <Model.h>
 
 void help() {
@@ -14,185 +13,24 @@ void help() {
         "4. help – распечатать справку о командах" << std::endl;
 }
 
-Controller::Controller(Model & model_new, View & view_new) : model(model_new), view(view_new) {};
-
-std::vector<size_t> convert_str_to_vector(const std::string & str) {
-    std::vector<size_t> vector;
-    for (const char number : str) {
-        vector.push_back(static_cast<size_t>(number) -
-            static_cast<size_t>('0'));
-    }
-    return vector;
-}
+Controller::Controller(Model & model_, View & view_new) : model(model_),
+view(view_new) {};
 
 
-void Controller::read_file(const std::string & filename) const {
-    std::fstream fs;
-    fs.open(filename);
-    if (!fs.is_open()) {
-        throw std::ios_base::failure("Не удалось открыть файл: " + filename);
-    }
-    std::string current_str;
-    int count_str = 0;
-    Field & field = model.get_field();
-    while(std::getline(fs, current_str)) {
-        count_str++;
-        int index_1 = 0, index_2 = 0, weight = 0, height = 0;
-        std::string name_universe = "Standard name";
-        if (count_str == 1) {
-            if (current_str.find("#Life") == std::string::npos) {
-                throw std::invalid_argument("Неверный формат файла. Файл должен быть формы .life");
-            }
-        }
-        if (count_str == 2) {
-            index_1 = static_cast<int>(current_str.find("#N"));
-            if (index_1 == std::string::npos) {
-                std::cout << "-----------------------" << std::endl
-                        << "Нет названия вселенной" << std::endl
-                        << "-----------------------" << std::endl;
-            }
-            else {
-                name_universe = current_str.substr(index_1 + 3);
-            }
-            model.change_name_universe(name_universe);
-            continue;
-        }
-        if(count_str == 3) {
-            index_1 = static_cast<int>(current_str.find('B'));
-            index_2 = static_cast<int>(current_str.find('S'));
-            {
-                const std::string str_born = current_str.substr(index_1 + 1, index_2 - index_1 - 2);
-                const std::string str_survive = current_str.substr(index_2 + 1);
-                auto born = convert_str_to_vector(str_born);
-                auto survive = convert_str_to_vector(str_survive);
-
-                model.change_rules(born, survive);
-            }
-            continue;
-        }
-        if (count_str == 4) {
-            index_1 = static_cast<int>(current_str.find('W'));
-            index_2 = static_cast<int>(current_str.find('H'));
-            {
-                const std::string str_height = current_str.substr(index_2 + 1, index_1 - 2 - index_2);
-                const std::string str_weight = current_str.substr(index_1 + 1);
-                height = std::stoi(str_height);
-                weight = std::stoi(str_weight);
-                field.change_size(weight, height);
-                field.init_field();
-            }
-            continue;
-        }
-        int x, y;
-        std::istringstream stream(current_str);
-        stream >> x >> y;
-        if (x >= (model.get_field()).get_weight()) {
-            continue;
-        }
-        if (x < 0) {
-            x = (x + weight) % weight;
-        }
-        if (y >= (model.get_field()).get_height()) {
-            continue;;
-        }
-        if (y < 0) {
-            y = (y + height) % height;
-        }
-        (model.get_field()).add_life_cell(x, y);
-    }
-}
 
 void Controller::write_file(const std::string & filename) const {
-    std::fstream fs;
-    fs.open(filename, std::ios::out | std::ios::trunc);
-    if (!fs.is_open()) {
-        throw std::ios_base::failure("Не удалось открыть файл.");
-    }
-    fs.write("#Life 1.06\n", 11);
-    std::string name_universe = model.get_name_universe();
-    fs.write("#N ", 3);
-    fs.write(name_universe.c_str(), static_cast<int>(name_universe.length()));
-    fs << '\n';
-    fs.write("#R B", 4);
-    std::pair<std::vector<size_t>, std::vector<size_t>> rules =
-        model.get_rules();
-    for (const size_t & num:rules.first) {
-        fs << num;
-    }
-    fs << "/S";
-    for (const size_t & num:rules.second) {
-        fs << num;
-    }
-    fs << '\n';
-    fs.write("#SIZE H", 7);
-    fs << (model.get_field()).get_height() << "/W" << (model.get_field()).get_weight() << '\n';
-    std::vector<std::vector<Field::field_cells>> field = (model.get_field()).get_field();
-    for (size_t i = 0; i < (model.get_field()).get_weight(); i++) {
-        for (size_t j = 0; j < (model.get_field()).get_height(); j++) {
-            if (field[i][j] == Field::alive) { //
-                fs << i << ' ' << j << '\n';
-            }
-        }
-    }
+    Handler_file handler(model);
+    handler.write_file(filename);
 }
 
-int Controller::calc_alive_cells(const size_t i, const size_t j) const{
-    int count_alive_cells = 0;
-    Field field = model.get_field();
-    size_t height = field.get_height();
-    size_t weight = field.get_weight();
-    std::vector<std::vector<Field::field_cells>> field_current = field.get_field();
-
-    const int shift_j[] {-1, -1, -1, 0, 0, 1, 1, 1};
-    const int shift_i[] {1, 0, -1, 1, -1, 1, 0, -1};
-    for (int k = 0; k < 8; k++) {
-        const size_t new_i = (i + shift_i[k] + height) % height;
-        const size_t new_j = (j + shift_j[k] + weight) % weight;
-        if (field_current[new_i][new_j] == Field::alive) {
-            count_alive_cells++;
-        }
-    }
-    return count_alive_cells;
-}
-
-void Controller::change_field_by_rules(const int count_tick) const {
-    std::vector<size_t> born = model.get_rules().first;
-    std::vector<size_t> survive = model.get_rules().second;
-
-    const size_t weight = (model.get_field()).get_weight();
-    const size_t height = (model.get_field()).get_height();
-    std::vector<std::vector<Field::field_cells>> current_field = (model.get_field()).get_field();
-
-    int count_alive_cells = 0;
-    for (int tick = 0; tick < count_tick; tick++) {
-        std::vector field_new(height,
-        std::vector(weight, Field::die));
-        for(size_t i = 0; i < height; ++i) {
-            for(size_t j = 0; j < weight; ++j) {
-                const Field::field_cells status = current_field[i][j];
-                count_alive_cells = calc_alive_cells(i, j);
-                if (status == Field::die and std::find(begin(born),
-                    end(born), count_alive_cells) != end(born)) {
-                    field_new[i][j] = Field::alive;
-                    continue;
-                    } // born
-                if (status == Field::alive) {
-                    if (std::find(begin(survive),
-                    end(survive), count_alive_cells) != end(survive)) {
-                        field_new[i][j] = Field::alive;
-                        continue;
-                    }
-                    field_new[i][j] = Field::die;
-                } // survive
-            }
-        }
-        current_field = field_new;
-        (model.get_field()).change_field(current_field);
+void Controller::change_field_by_rules(int count_tick) const {
+    for (int i = 0; i < count_tick; i++) {
+        model.evolution_world();
         view.image_field();
         std::cout << "----------" << std::endl;
     }
-
 }
+
 
 void Controller::offline_mode(int count_iter, const std::string & out_file) const {
     change_field_by_rules(count_iter);
