@@ -27,7 +27,6 @@ void Controller::change_field_by_rules(int count_tick) const {
     for (int i = 0; i < count_tick; i++) {
         model.evolution_world();
         view.image_field();
-        std::cout << "----------" << std::endl;
     }
 }
 

@@ -2,6 +2,7 @@
 #include "View.h"
 #include "Model.h"
 #include "Field.h"
+
 View::View(Model & new_model) : model(new_model) {};
 
 
@@ -20,5 +21,6 @@ void View::image_field() const {
         }
         std::cout << std::endl;
     }
+    std::cout << "----------" << std::endl;
 }
 

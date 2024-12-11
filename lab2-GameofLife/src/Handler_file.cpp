@@ -8,13 +8,13 @@
 
 Handler_file::Handler_file(Model & model_) : model(model_) {}
 
-std::vector<size_t> convert_str_to_vector(const std::string & str) {
-    std::vector<size_t> vector;
+std::array<int, 9> convert_str_to_array(const std::string & str) {
+    std::array<int, 9> array{};
     for (const char number : str) {
-        vector.push_back(static_cast<size_t>(number) -
-            static_cast<size_t>('0'));
+        array[static_cast<size_t>(number) -
+            static_cast<size_t>('0')] = 1;
     }
-    return vector;
+    return array;
 }
 
 void Handler_file::read_file(const std::string & filename) const {
@@ -55,8 +55,8 @@ void Handler_file::read_file(const std::string & filename) const {
             {
                 const std::string str_born = current_str.substr(index_1 + 1, index_2 - index_1 - 2);
                 const std::string str_survive = current_str.substr(index_2 + 1);
-                auto born = convert_str_to_vector(str_born);
-                auto survive = convert_str_to_vector(str_survive);
+                auto born = convert_str_to_array(str_born);
+                auto survive = convert_str_to_array(str_survive);
 
                 model.change_rules(born, survive);
             }
@@ -108,14 +108,27 @@ void Handler_file::write_file(const std::string & filename) const {
     fs.write(name_universe.c_str(), static_cast<int>(name_universe.length()));
     fs << '\n';
     fs.write("#R B", 4);
-    std::pair<std::vector<size_t>, std::vector<size_t>> rules =
-        model.get_rules();
-    for (const size_t & num:rules.first) {
-        fs << num;
+    std::array<int, 9> born = model.get_born();
+    std::array<int, 9> survive = model.get_survive();
+
+    // std::pair<std::vector<size_t>, std::vector<size_t>> rules =
+    //     model.get_rules();
+    for (int i = 0; i < 9; i++) {
+        if (born[i] == 1) {
+            fs << i;
+        }
     }
+    // for (const size_t & num:rules.first) {
+    //     fs << num;
+    // }
     fs << "/S";
-    for (const size_t & num:rules.second) {
-        fs << num;
+    // for (const size_t & num:rules.second) {
+    //     fs << num;
+    // }
+    for (int i = 0; i < 9; i++) {
+        if (survive[i] == 1) {
+            fs << i;
+        }
     }
     fs << '\n';
     fs.write("#SIZE H", 7);
