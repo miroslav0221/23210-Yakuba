@@ -3,23 +3,34 @@
 #include "WavHeader.h"
 #include <fstream>
 DataSource::DataSource() : count_samples(0){}
+void help_() {
+    std::cout << "1. mix index start_sec" << std::endl
+        << "2. mute start_sec end_sec" << std::endl
+        << "3. vol sec_start sec_end coefficient" << std::endl;
 
+}
 int DataSource::process_run(int argc, char *argv[]) {
-    if (argc < 6) {
+    if (argc < 5) {
         std::cout << "Передайте файлы" << std::endl;
         return -1;
     }
-    if(static_cast<std::string>(argv[1]) != "-h"
-        or static_cast<std::string>(argv[2]) != "-c") {
+    int k = 1;
+    if (static_cast<std::string>(argv[1]) == "-h") {
+        help_();
+        k++;
+    }
+    if(static_cast<std::string>(argv[k]) != "-c") {
         std::cout << "Некорректные ключи" << std::endl;
         return -1;
-        }
-    //sound_processor [-h] [-c config.txt output.wav input1.wav [input2.wav …]]
-    config = static_cast<std::string>(argv[3]);
-    output = static_cast<std::string>(argv[4]);
+    }
+    k++;
+    config = static_cast<std::string>(argv[k]);
+    k++;
+    output = static_cast<std::string>(argv[k]);
+    k++;
     std::vector<int> buffer(argc, 0);
     size_audio_data = buffer;
-    int index = 5;
+    int index = k;
     std::vector<int> count_processed_sec_(argc - index);
     std::fill(count_processed_sec_.begin(), count_processed_sec_.end(), 0);
     count_processed_sec = count_processed_sec_;
@@ -29,7 +40,7 @@ int DataSource::process_run(int argc, char *argv[]) {
             throw std::runtime_error("Не удалось открыть WAV файл");
         }
         streams_.push_back(std::move(input_));
-        read_wav_header(index - 5);
+        read_wav_header(index - k);
         index++;
     }
     return 0;

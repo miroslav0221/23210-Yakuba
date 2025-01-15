@@ -4,7 +4,7 @@
 #include <iostream>
 
 
-//vol index sec_start sec_end
+//vol sec_start sec_end coefficient
 namespace Converter {
     class ChangeVolConverter : public IConverter {
     private:
